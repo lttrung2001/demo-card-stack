@@ -1,6 +1,7 @@
 package vn.trunglt.democardstack
 
 import android.os.Bundle
+import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
@@ -24,7 +25,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        binding.main.addTransitionListener(object: TransitionListener {
+        binding.main.addTransitionListener(object : TransitionListener {
             override fun onTransitionStarted(
                 motionLayout: MotionLayout?,
                 startId: Int,
@@ -61,19 +62,90 @@ class MainActivity : AppCompatActivity() {
             when (selectedId) {
                 0 -> {
                     selectedId = 1
-                    binding.main.transitionToState(R.id.second_item_selected)
+                    binding.main.setupConstraintSet(
+                        constraintSetId = R.id.second_item_selected,
+                        centralViewId = R.id.image_view_card_2,
+                        leftViewId = R.id.image_view_card_3,
+                        rightViewId = R.id.image_view_card_1
+                    )
                 }
 
                 1 -> {
                     selectedId = 2
-                    binding.main.transitionToState(R.id.third_item_selected)
+                    binding.main.setupConstraintSet(
+                        constraintSetId = R.id.third_item_selected,
+                        centralViewId = R.id.image_view_card_3,
+                        leftViewId = R.id.image_view_card_1,
+                        rightViewId = R.id.image_view_card_2
+                    )
                 }
 
                 2 -> {
                     selectedId = 0
-                    binding.main.transitionToState(R.id.first_item_selected)
+                    binding.main.setupConstraintSet(
+                        constraintSetId = R.id.first_item_selected,
+                        centralViewId = R.id.image_view_card_1,
+                        leftViewId = R.id.image_view_card_2,
+                        rightViewId = R.id.image_view_card_3
+                    )
                 }
             }
         }
+    }
+}
+
+fun View.percentWidthOf(percent: Int): Int {
+    return right.minus(left).times(percent).div(100)
+}
+
+fun View.percentHeightOf(percent: Int): Int {
+    return bottom.minus(top).times(percent).div(100)
+}
+
+fun MotionLayout.setupConstraintSet(constraintSetId: Int, centralViewId: Int, leftViewId: Int, rightViewId: Int) {
+    cloneConstraintSet(constraintSetId).apply {
+        var viewId = centralViewId
+        var view = findViewById<View>(viewId)
+        setTransformPivotX(
+            viewId,
+            view.percentWidthOf(50).toFloat()
+        )
+        setTransformPivotY(
+            viewId,
+            view.percentWidthOf(100).toFloat()
+        )
+
+        viewId = leftViewId
+        view = findViewById(viewId)
+        setTranslationY(
+            viewId,
+            (-view.percentHeightOf(5)).toFloat()
+        )
+        setTransformPivotX(
+            viewId,
+            view.percentWidthOf(30).toFloat()
+        )
+        setTransformPivotY(
+            viewId,
+            view.percentHeightOf(100).toFloat()
+        )
+
+        viewId = rightViewId
+        view = findViewById(viewId)
+        setTranslationY(
+            viewId,
+            (-view.percentHeightOf(5)).toFloat()
+        )
+        setTransformPivotX(
+            viewId,
+            view.percentWidthOf(70).toFloat()
+        )
+        setTransformPivotY(
+            viewId,
+            view.percentHeightOf(100).toFloat()
+        )
+    }.also {
+        updateState(constraintSetId, it)
+        transitionToState(constraintSetId)
     }
 }
