@@ -5,12 +5,15 @@ import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
-import androidx.constraintlayout.motion.widget.MotionLayout.TransitionListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.ItemTouchHelper
 import vn.trunglt.democardstack.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+    private val cardAdapter by lazy {
+        CardAdapter()
+    }
     private var canClick: Boolean = true
     private var selectedId = 0
     private lateinit var binding: ActivityMainBinding
@@ -25,72 +28,20 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        binding.main.addTransitionListener(object : TransitionListener {
-            override fun onTransitionStarted(
-                motionLayout: MotionLayout?,
-                startId: Int,
-                endId: Int
-            ) {
-                canClick = false
-            }
-
-            override fun onTransitionChange(
-                motionLayout: MotionLayout?,
-                startId: Int,
-                endId: Int,
-                progress: Float
-            ) {
-
-            }
-
-            override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-                canClick = true
-            }
-
-            override fun onTransitionTrigger(
-                motionLayout: MotionLayout?,
-                triggerId: Int,
-                positive: Boolean,
-                progress: Float
-            ) {
-
-            }
-        })
-
-        binding.buttonRight.setOnClickListener {
-            if (!canClick) return@setOnClickListener
-            when (selectedId) {
-                0 -> {
-                    selectedId = 1
-                    binding.main.setupConstraintSet(
-                        constraintSetId = R.id.second_item_selected,
-                        centralViewId = R.id.image_view_card_2,
-                        leftViewId = R.id.image_view_card_3,
-                        rightViewId = R.id.image_view_card_1
-                    )
-                }
-
-                1 -> {
-                    selectedId = 2
-                    binding.main.setupConstraintSet(
-                        constraintSetId = R.id.third_item_selected,
-                        centralViewId = R.id.image_view_card_3,
-                        leftViewId = R.id.image_view_card_1,
-                        rightViewId = R.id.image_view_card_2
-                    )
-                }
-
-                2 -> {
-                    selectedId = 0
-                    binding.main.setupConstraintSet(
-                        constraintSetId = R.id.first_item_selected,
-                        centralViewId = R.id.image_view_card_1,
-                        leftViewId = R.id.image_view_card_2,
-                        rightViewId = R.id.image_view_card_3
-                    )
-                }
-            }
-        }
+        val itemTouchHelper = ItemTouchHelper(
+            SwipeToBringFrontCallback(
+                cardAdapter
+            )
+        )
+        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+        binding.recyclerView.adapter = cardAdapter
+        cardAdapter.submitList(
+            listOf(
+                android.R.color.holo_blue_dark,
+                android.R.color.holo_red_dark,
+                R.drawable.ic_launcher_background,
+            )
+        )
     }
 }
 
@@ -102,7 +53,12 @@ fun View.percentHeightOf(percent: Int): Int {
     return bottom.minus(top).times(percent).div(100)
 }
 
-fun MotionLayout.setupConstraintSet(constraintSetId: Int, centralViewId: Int, leftViewId: Int, rightViewId: Int) {
+fun MotionLayout.setupConstraintSet(
+    constraintSetId: Int,
+    centralViewId: Int,
+    leftViewId: Int,
+    rightViewId: Int
+) {
     cloneConstraintSet(constraintSetId).apply {
         var viewId = centralViewId
         var view = findViewById<View>(viewId)
